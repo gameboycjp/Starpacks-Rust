@@ -67,24 +67,17 @@ fn main() {
     let mut pack_dir = env::current_dir().unwrap();
     pack_dir.push(pack_name);
     println!("Pack location: {}", pack_dir.display());
-
+    let link_dir_list = ["assets", "doc", "tiled"];
     if !pack_dir.exists() {
         println!("Pack doesn't exist! Creating from game files.");
         fs::create_dir(&pack_dir).expect("Could not create main pack folder!");
+        #[cfg(target_family = "unix")]
         fs::create_dir(&format!("{}{}", &pack_dir.display(), "/linux")).expect("Could not create linux folder!");
+        #[cfg(target_family = "windows")]
+        fs::create_dir(&format!("{}{}", &pack_dir.display(), "/win64")).expect("Could not create win64 folder!");
         fs::create_dir(&format!("{}{}", &pack_dir.display(), "/mods")).expect("Could not create mods folder!");
         fs::create_dir(&format!("{}{}", &pack_dir.display(), "/storage")).expect("Could not create storage folder!");
-        let link_list = [
-            "assets",
-            "doc",
-            "tiled",
-            "linux/planet_mapgen",
-            "linux/make_versioned_json",
-            "linux/libsteam_api.so",
-            "linux/dump_versioned_json",
-            "linux/asset_unpacker",
-            "linux/asset_packer",
-        ];
+        #[cfg(target_family = "unix")]
         let copy_list = [
             "linux/sbinit.config",
             "linux/run-client.sh",
@@ -92,10 +85,51 @@ fn main() {
             "linux/starbound_server",
             "linux/starbound",
         ];
-        link_list.iter().for_each(|thing| {
+        #[cfg(target_family = "windows")]
+        let copy_list = [
+            "win64/sbinit.config",
+            "win64/starbound_server.exe",
+            "win64/starbound.exe",
+        ];
+        let mut link_list_search_directory = game_location.clone() + "/";
+        #[cfg(target_family = "unix")]
+        let platstring = "linux/";
+        #[cfg(target_family = "windows")]
+        let platstring = "win64/";
+        link_list_search_directory.push_str(platstring);
+        println!("{:?}", link_list_search_directory.clone());
+        let link_file_list2 = fs::read_dir(&link_list_search_directory).unwrap();
+        let mut link_file_list = Vec::new();
+        for index in link_file_list2.into_iter() {
+            println!("index: {:?}", index);
+            let new_val = index.unwrap().file_name();
+            link_file_list.push(new_val);
+        }
+
+        link_dir_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
             pack_subdir.push(thing);
-            symlink_file(game_location.to_owned() + "/" + thing, pack_subdir).unwrap()
+            symlink_dir(game_location.to_owned() + "/" + thing, pack_subdir).unwrap()
+        });
+        link_file_list.into_iter().for_each(|thing| {
+            let mut pack_subdir = pack_dir.clone();
+            pack_subdir.push(platstring);
+            pack_subdir.push(&thing);
+            println!("{}", pack_subdir.as_os_str().to_string_lossy());
+            let mut should_link = true;
+            println!("{}", game_location);
+
+            let symlink_source = game_location.to_owned() + "/" + platstring + &thing.clone().to_str().unwrap();
+            for i in copy_list.iter() {
+                if symlink_source.clone().contains(i) {
+                    should_link = false;
+                }
+                println!("{}", i);
+            }
+            println!("{}", symlink_source);
+            if should_link {
+                symlink_auto(Path::new(&symlink_source), pack_subdir).unwrap();
+            }
         });
         copy_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
@@ -104,8 +138,7 @@ fn main() {
         });
     } else {
         println!("Pack folder exists! Relinking game files.");
-        let link_list = ["assets", "doc", "tiled"];
-        link_list.iter().for_each(|thing| {
+        link_dir_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
             pack_subdir.push(thing);
             if pack_subdir.exists() {
