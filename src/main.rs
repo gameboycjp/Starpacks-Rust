@@ -7,14 +7,24 @@ there are some other options you could take a look at by just doing run-client.s
 
 
 use copy_dir::copy_dir;
-use std::os::unix;
+#[cfg(target_family = "windows")]
+use is_elevated::is_elevated;
+use symlink::*;
 use std::path::Path;
-use std::{env, fs, io};
+use std::{env, fs, io, process};
 use steam_workshop_api::{Workshop, WorkshopItem};
 
 static DEFAULT_PACK: &str = "defaultpack";
 
 fn main() {
+    #[cfg(target_family = "windows")] {
+        if !is_elevated() {
+            println!("This program must be run as Administator on Windows, as it makes heavy use of symlinks. Hit enter to exit."); //I cannot stand this OS.
+            pause();
+            process::exit(1);
+        }
+    }
+
     //prep work
     let current_dir = env::current_dir().unwrap();
     let mut game_location_filepath = current_dir.clone();
@@ -85,7 +95,7 @@ fn main() {
         link_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
             pack_subdir.push(thing);
-            unix::fs::symlink(game_location.to_owned() + "/" + thing, pack_subdir).unwrap()
+            symlink_file(game_location.to_owned() + "/" + thing, pack_subdir).unwrap()
         });
         copy_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
@@ -99,9 +109,9 @@ fn main() {
             let mut pack_subdir = pack_dir.clone();
             pack_subdir.push(thing);
             if pack_subdir.exists() {
-                fs::remove_file(&pack_subdir).unwrap();
+                remove_symlink_dir(&pack_subdir).unwrap();
             }
-            unix::fs::symlink(game_location.to_owned() + "/" + thing, &pack_subdir).unwrap()
+          symlink_dir(game_location.to_owned() + "/" + thing, &pack_subdir).unwrap()
         });
     }
 
@@ -166,11 +176,18 @@ fn main() {
         }
         if mod_found {
             if pack_subdir.exists() {
-                fs::remove_file(&pack_subdir).unwrap();
+                remove_symlink_file(&pack_subdir).unwrap();
             }
-            unix::fs::symlink(game_sublocation, &pack_subdir).unwrap()
+            symlink_file(game_sublocation, &pack_subdir).unwrap()
         }
     });
+}
+
+fn pause() {
+        let mut input = String::new();
+        io::stdin()
+            .read_line(&mut input)
+            .expect("Failed to read input");
 }
 
 fn sbpath_input() -> String {
@@ -181,15 +198,10 @@ fn sbpath_input() -> String {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read input");
-        if input.chars().last() == Some('\n') {
-            input.pop();
-        }
-        if input.chars().last() == Some('/') {
-            input.pop();
-        }
+        let input = input.trim().to_string();
         let mut input_check = input.clone();
         input_check.push_str("/assets/packed.pak");
-
+        println!("{}", &input_check);
         let input_check_file = Path::new(&input_check);
         let path_file_exists = input_check_file.exists();
         if path_file_exists {
@@ -208,12 +220,7 @@ fn wspath_input() -> String {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read input");
-        if input.chars().last() == Some('\n') {
-            input.pop();
-        }
-        if input.chars().last() == Some('/') {
-            input.pop();
-        }
+        let input = input.trim().to_string();
         println!("TODO: Need a path check for Workshop."); //TODO: Probably take whatever folder is easy to reach and check for the contents.pak? TODO2: or any pak
         return input;
     }
@@ -226,9 +233,7 @@ fn input(prompt: &str) -> String {
     io::stdin()
         .read_line(&mut input)
         .expect("Failed to read input");
-    if input.chars().last() == Some('\n') {
-        input.pop();
-    }
+    let mut input = input.trim().to_string();
     if input.is_empty() {
         input = String::from(DEFAULT_PACK)
     }
