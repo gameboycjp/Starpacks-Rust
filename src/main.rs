@@ -97,11 +97,9 @@ fn main() {
         #[cfg(target_family = "windows")]
         let platstring = "win64/";
         link_list_search_directory.push_str(platstring);
-        println!("{:?}", link_list_search_directory.clone());
         let link_file_list2 = fs::read_dir(&link_list_search_directory).unwrap();
         let mut link_file_list = Vec::new();
         for index in link_file_list2.into_iter() {
-            println!("index: {:?}", index);
             let new_val = index.unwrap().file_name();
             link_file_list.push(new_val);
         }
@@ -115,18 +113,14 @@ fn main() {
             let mut pack_subdir = pack_dir.clone();
             pack_subdir.push(platstring);
             pack_subdir.push(&thing);
-            println!("{}", pack_subdir.as_os_str().to_string_lossy());
             let mut should_link = true;
-            println!("{}", game_location);
 
             let symlink_source = game_location.to_owned() + "/" + platstring + &thing.clone().to_str().unwrap();
             for i in copy_list.iter() {
                 if symlink_source.clone().contains(i) {
                     should_link = false;
                 }
-                println!("{}", i);
             }
-            println!("{}", symlink_source);
             if should_link {
                 symlink_auto(Path::new(&symlink_source), pack_subdir).unwrap();
             }
