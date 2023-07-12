@@ -9,9 +9,11 @@ there are some other options you could take a look at by just doing run-client.s
 use copy_dir::copy_dir;
 #[cfg(target_family = "windows")]
 use is_elevated::is_elevated;
+#[cfg(target_family = "windows")]
+use std::process;
 use symlink::*;
 use std::path::Path;
-use std::{env, fs, io, process};
+use std::{env, fs, io};
 use steam_workshop_api::{Workshop, WorkshopItem};
 
 static DEFAULT_PACK: &str = "defaultpack";
@@ -208,6 +210,9 @@ fn main() {
             symlink_file(game_sublocation, &pack_subdir).unwrap()
         }
     });
+
+    println!("Complete! Take another look at the above logging to check if anything went wrong.");
+    pause();
 }
 
 fn pause() {
