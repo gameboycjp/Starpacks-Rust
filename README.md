@@ -3,7 +3,7 @@ Creates modpacks for Starbound using symlinking and minimal file copying.
 
 Should now work on both Windows and Linux.
 
-Workshop mods must be a contents.pak for now. If you know any mods that are more than just a .pak, please open an issue and pass a link over! I do not know of any mods that are like that on the workshop.
+Workshop mods must be a contents.pak for now. If you know any mods that are more than just a .pak, please open an issue and pass a link over! I do not know of any mods that are like that on the workshop. Additionally, the workshop path setup and file is completely ignored at the moment.
 
 ### TODOs
 

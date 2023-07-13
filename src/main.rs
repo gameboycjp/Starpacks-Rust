@@ -230,7 +230,10 @@ fn sbpath_input() -> String {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read input");
-        let input = input.trim().to_string();
+        let mut input = input.trim().to_string();
+        if input.chars().last() == Some('/') {
+            input.pop();
+        }
         let mut input_check = input.clone();
         input_check.push_str("/assets/packed.pak");
         println!("{}", &input_check);
@@ -252,7 +255,10 @@ fn wspath_input() -> String {
         io::stdin()
             .read_line(&mut input)
             .expect("Failed to read input");
-        let input = input.trim().to_string();
+        let mut input = input.trim().to_string();
+        if input.chars().last() == Some('/') {
+            input.pop();
+        }
         println!("TODO: Need a path check for Workshop."); //TODO: Probably take whatever folder is easy to reach and check for the contents.pak? TODO2: or any pak
         return input;
     }
