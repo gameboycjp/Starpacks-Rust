@@ -189,13 +189,13 @@ fn main() {
     wsmods.iter().for_each(|thing| {
         println!();
         let mut pack_subdir = pack_dir.clone();
-        let mut game_sublocation = game_location.clone();
+        let mut ws_sublocation = workshop_location.clone();
         pack_subdir.push("mods/".to_owned() + &thing.publishedfileid + ".pak");
-        game_sublocation.push_str(&format!(
+        ws_sublocation.push_str(&format!(
             "{}{}{}",
-            "/../../workshop/content/211820/", &thing.publishedfileid, "/contents.pak"
+            "/", &thing.publishedfileid, "/contents.pak"
         ));
-        let mod_location = Path::new(&game_sublocation);
+        let mod_location = Path::new(&ws_sublocation);
         println!("{}", mod_location.display());
         let mod_found = mod_location.exists();
         if !mod_found {
@@ -207,7 +207,7 @@ fn main() {
             if pack_subdir.exists() {
                 remove_symlink_file(&pack_subdir).unwrap();
             }
-            symlink_file(game_sublocation, &pack_subdir).unwrap()
+            symlink_file(ws_sublocation, &pack_subdir).unwrap()
         }
     });
 
