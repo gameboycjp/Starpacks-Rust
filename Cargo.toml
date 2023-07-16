@@ -8,8 +8,10 @@ edition = "2021"
 [dependencies]
 copy_dir = "0.1.2"
 is_elevated = "0.1.2"
+serde = "1.0.171"
 steam-workshop-api = "0.3.0"
 symlink = "0.1.0"
+toml = "0.7.6"
 
 [profile.release]
 opt-level = "s"

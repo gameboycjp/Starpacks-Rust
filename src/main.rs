@@ -9,12 +9,36 @@ there are some other options you could take a look at by just doing run-client.s
 use copy_dir::copy_dir;
 #[cfg(target_family = "windows")]
 use is_elevated::is_elevated;
-//#[cfg(target_family = "windows")]
+#[cfg(target_family = "windows")]
 use std::process;
 use symlink::*;
 use std::path::Path;
 use std::{env, fs, io};
 use steam_workshop_api::{Workshop, WorkshopItem};
+use serde::{Serialize, Deserialize};
+
+
+#[derive(Serialize, Deserialize)]
+struct MainConfig {
+    game_location: Option<String>,
+    workshop_location: Option<String>
+}
+
+impl MainConfig {
+    fn empty () -> Self {
+        MainConfig{game_location: None, workshop_location: None}
+    }
+    fn from_toml (main_config_contents: &str) -> Self {
+        toml::from_str(main_config_contents).unwrap()
+    }
+}
+
+#[derive(Serialize, Deserialize)]
+struct PackConfig {
+    pack_name: String,
+    workshop_id: String
+}
+
 
 static DEFAULT_PACK: &str = "defaultpack";
 
@@ -29,37 +53,38 @@ fn main() {
 
     //prep work
     let current_dir = env::current_dir().unwrap();
-    let mut game_location_filepath = current_dir.clone();
-    game_location_filepath.push("sbpath.txt");
+    let mut main_config_filepath = current_dir.clone();
+    main_config_filepath.push("starpacksconfig.toml");
 
-    let game_location_filepath = Path::new(&game_location_filepath);
-    let mut game_location = String::new();
-    let path_file_exists = game_location_filepath.exists();
-    let mut path_file_correct = false;
+    let mut main_config = MainConfig::empty();
+    let main_config_filepath = Path::new(&main_config_filepath);
+    let main_config_file_exists = main_config_filepath.exists();
+    if !main_config_file_exists {
+        let game_location = sbpath_input();
+        main_config.game_location = Some(game_location);
+        let workshop_location = wspath_input();
+        main_config.workshop_location = Some(workshop_location);
+        let main_config_toml = toml::to_string_pretty(&main_config).unwrap();
+        fs::write(main_config_filepath, main_config_toml).unwrap();
 
-    if path_file_exists {
-        println!("Starbound path file found.");
-        game_location = fs::read_to_string(game_location_filepath).unwrap();
-
-        let mut input_check = game_location.clone();
-        input_check.push_str("/assets/packed.pak");
-
-        let input_check_file = Path::new(&input_check);
-        let path_file_exists = input_check_file.exists();
-        if path_file_exists {
-            println!("Starbound asset found! Continuing.");
-            path_file_correct = true;
-        }
     } else {
-        println!("Starbound path file missing.");
+        let mut game_path_correct = false;
+        let main_config_toml = fs::read_to_string(main_config_filepath).unwrap();
+        let mut main_config = MainConfig::from_toml(&main_config_toml);
+        if main_config.game_location.is_some() {
+            game_path_correct = sbpath_check(main_config.game_location.unwrap())
+        }
+        if !game_path_correct {
+            let game_location = sbpath_input();
+            main_config.game_location = Some(game_location);
+        }
+        if !main_config.workshop_location.is_some() {
+            let workshop_location = wspath_input();
+            main_config.workshop_location = Some(workshop_location)
+        }
     }
 
-    if !path_file_correct {
-        println!("Path invalid!");
-        game_location = sbpath_input();
-        fs::write(game_location_filepath, &game_location)
-            .expect("TODO: panic message, file not written...");
-    }
+    let game_location = main_config.game_location.unwrap();
 
     println!("Game path: {}", game_location);
 
@@ -144,36 +169,7 @@ fn main() {
         });
     }
 
-    //workshop setup
-    let mut workshop_location_filepath = current_dir.clone();
-    workshop_location_filepath.push("wspath.txt");
-
-    let workshop_location_filepath = Path::new(&workshop_location_filepath);
-    let mut workshop_location = String::new();
-    let wspath_file_exists = workshop_location_filepath.exists();
-    let mut wspath_file_correct = false;
-
-    if wspath_file_exists {
-        println!("Workshop path file found.");
-        workshop_location = fs::read_to_string(workshop_location_filepath).unwrap();
-
-        let input_check = workshop_location.clone();
-
-        let input_check_file = Path::new(&input_check);
-        let wspath_file_exists = input_check_file.exists();
-        if wspath_file_exists {
-            println!("Workshop folder exists! Continuing.");
-            wspath_file_correct = true;
-        }
-    } else {
-        println!("Workshop path file missing.");
-    }
-
-    if !wspath_file_correct {
-        workshop_location = wspath_input();
-        fs::write(workshop_location_filepath, &workshop_location)
-            .expect("TODO: panic message, file not written...");
-    }
+    let workshop_location = main_config.workshop_location.unwrap();
 
     println!("Workshop path: {}", workshop_location);
 
@@ -247,17 +243,22 @@ fn sbpath_input() -> String {
         if input.chars().last() == Some('/') {
             input.pop();
         }
-        let mut input_check = input.clone();
-        input_check.push_str("/assets/packed.pak");
-        println!("{}", &input_check);
-        let input_check_file = Path::new(&input_check);
-        let path_file_exists = input_check_file.exists();
+        let input_check = input.clone();
+        let path_file_exists = sbpath_check(input_check);
         if path_file_exists {
             println!("Starbound found! Continuing.");
             return input;
         }
         println!("Starbound not found! Please try again.")
     }
+}
+
+fn sbpath_check(mut input_check: String) -> bool {
+    input_check.push_str("/assets/packed.pak");
+    println!("{}", &input_check);
+    let input_check_file = Path::new(&input_check);
+    let path_file_exists = input_check_file.exists();
+    return path_file_exists;
 }
 
 fn wspath_input() -> String {
