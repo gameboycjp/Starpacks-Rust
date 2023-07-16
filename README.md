@@ -1,11 +1,11 @@
 # Starpacks
 Creates modpacks for Starbound using symlinking and minimal file copying.
 
-Should now work on both Windows and Linux. Now patched to actually use the workshop path.
+Should now work on both Windows and Linux.
 
 Also remember to run as Admin on Windows! They block off symlinks without it, it's a pretty stupid limitation. Linux can run as user.
 
-Workshop mods must be a contents.pak for now. If you know any mods that are more than just a .pak, please open an issue and pass a link over! I do not know of any mods that are like that on the workshop.
+Should be widely compatible with most mods now! If you know of any mods on the workshop that are folders, open an issue and link me the mod so I can test myself. Theoretically it should work fine with those too without any fuss.
 
 ### TODOs
 

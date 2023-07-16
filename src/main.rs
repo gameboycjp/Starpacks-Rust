@@ -9,7 +9,7 @@ there are some other options you could take a look at by just doing run-client.s
 use copy_dir::copy_dir;
 #[cfg(target_family = "windows")]
 use is_elevated::is_elevated;
-#[cfg(target_family = "windows")]
+//#[cfg(target_family = "windows")]
 use std::process;
 use symlink::*;
 use std::path::Path;
@@ -186,29 +186,42 @@ fn main() {
         .unwrap()
         .unwrap();
     let wsmods: Vec<WorkshopItem> = wsclient.get_published_file_details(&wscollection).unwrap();
-    wsmods.iter().for_each(|thing| {
+    wsmods.iter().for_each(|ws_item| {
         println!();
-        let mut pack_subdir = pack_dir.clone();
         let mut ws_sublocation = workshop_location.clone();
-        pack_subdir.push("mods/".to_owned() + &thing.publishedfileid + ".pak");
         ws_sublocation.push_str(&format!(
-            "{}{}{}",
-            "/", &thing.publishedfileid, "/contents.pak"
+            "{}{}",
+            "/", &ws_item.publishedfileid
         ));
-        let mod_location = Path::new(&ws_sublocation);
-        println!("{}", mod_location.display());
-        let mod_found = mod_location.exists();
-        if !mod_found {
-            println!("Mod not found! Perhaps it's not in a recognised format? Must be a singular file named contents.pak."); //TODO, FIX THIS! FFS! CHECK FOR ANY .PAK! IDIOT! DUNCE!
-        } else {
-            println!("{}", pack_subdir.display());
+        let ws_file_list2 = fs::read_dir(&ws_sublocation).unwrap();
+        let mut ws_file_list = Vec::new();
+        for index in ws_file_list2.into_iter() {
+            let new_val = index.unwrap().file_name();
+            println!("{}", new_val.clone().into_string().unwrap());
+            ws_file_list.push(new_val);
         }
-        if mod_found {
-            if pack_subdir.exists() {
-                remove_symlink_file(&pack_subdir).unwrap();
+        ws_file_list.into_iter().for_each(|thing| {
+            let mut pack_subdir = pack_dir.clone();
+            let thing_string = thing.to_str().unwrap();
+            let mut mod_location = ws_sublocation.clone().to_string();
+            mod_location.push_str("/");
+            mod_location.push_str(thing_string);
+            let mod_location_path = Path::new(&mod_location);
+            pack_subdir.push("mods/".to_owned() + &ws_item.publishedfileid + thing_string);
+            println!("{}", mod_location);
+            let mod_found = mod_location_path.exists();
+            if !mod_found {
+                println!("Mod file not found! This should never print!");
+            } else {
+                println!("{}", pack_subdir.display());
             }
-            symlink_file(ws_sublocation, &pack_subdir).unwrap()
-        }
+            if mod_found {
+                if pack_subdir.exists() {
+                    remove_symlink_file(&pack_subdir).unwrap();
+                }
+                symlink_file(&ws_sublocation, &pack_subdir).unwrap()
+            }
+        });
     });
 
     println!("Complete! Take another look at the above logging to check if anything went wrong.");
