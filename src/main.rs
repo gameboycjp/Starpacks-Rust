@@ -219,7 +219,7 @@ fn main() {
                 if pack_subdir.exists() {
                     remove_symlink_file(&pack_subdir).unwrap();
                 }
-                symlink_file(&ws_sublocation, &pack_subdir).unwrap()
+                symlink_file(&mod_location_path, &pack_subdir).unwrap()
             }
         });
     });
