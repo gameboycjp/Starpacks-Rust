@@ -5,7 +5,7 @@ Works on both Windows and Linux.
 
 Run as Admin on Windows! It will stop the program if it detects it's not user. Windows blocks off symlinks without it, it's a pretty stupid limitation.
 
-If you know of any mods on the workshop that are folders, open an issue and link me the mod so I can test it with the launcher. Theoretically it should work fine with those without any fuss, though.
+If you know of any mods on the workshop that are folders, open an issue and link me the mod so I can test it with the wizard. Theoretically it should work fine with those without any fuss, though.
 
 ### TODOs
 
