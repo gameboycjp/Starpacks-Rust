@@ -1,5 +1,5 @@
 # Starpacks
-Abandoned(?). I don't remember how strings work and I don't want to deal with them anymore.
+Abandoned. I don't remember how strings work and I don't want to deal with them anymore.
 
 Creates modpacks for Starbound using symlinking and minimal file copying.
 
