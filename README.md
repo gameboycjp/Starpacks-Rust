@@ -1,5 +1,6 @@
 # Starpacks
 Abandoned. I don't remember how strings work and I don't want to deal with them anymore.
+
 WARNING: Config loading doesn't work. Or more specifically, because it is loaded within a specific scope, the config values get nuked for being outside of scope once I try and turn them into a variable. 
 
 Creates modpacks for Starbound using symlinking and minimal file copying.
