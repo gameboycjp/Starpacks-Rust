@@ -67,7 +67,7 @@ fn main() {
         let main_config_toml = toml::to_string_pretty(&main_config).unwrap();
         fs::write(main_config_filepath, main_config_toml).unwrap();
 
-    } else {
+    } else { 
         let mut game_path_correct = false;
         let main_config_toml = fs::read_to_string(main_config_filepath).unwrap();
         main_config = MainConfig::from_toml(&main_config_toml);
@@ -157,7 +157,7 @@ fn main() {
             pack_subdir.push(thing);
             copy_dir(game_location.to_owned() + "/" + thing, pack_subdir).unwrap();
         });
-    } else {
+    } else { //I don't know what this is supposed to fix. I'm scared to touch it though, it could be important. 
         println!("Pack folder exists! Relinking game files.");
         link_dir_list.iter().for_each(|thing| {
             let mut pack_subdir = pack_dir.clone();
