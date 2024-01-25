@@ -70,7 +70,7 @@ fn main() {
     } else {
         let mut game_path_correct = false;
         let main_config_toml = fs::read_to_string(main_config_filepath).unwrap();
-        let mut main_config = MainConfig::from_toml(&main_config_toml);
+        main_config = MainConfig::from_toml(&main_config_toml);
         if main_config.game_location.is_some() {
             game_path_correct = sbpath_check(main_config.game_location.unwrap())
         }
